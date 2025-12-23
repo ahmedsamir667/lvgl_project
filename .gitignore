@@ -1,12 +1,14 @@
-# Ignore build folder
-build/
-bin/
+/build
+/bin
+*.exe
+*.o
+*.obj
+*.a
+*.map
+CMakeFiles/
+CMakeCache.txt
+Makefile
+*.log
+.vscode/
 
-# Ignore UI folder, this should be commited in its own repository
-ui/
 
-# Ignore all dot folders, with below exceptions
-.*/
-
-# VSCode
-.vscode

@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.12.4)
 project(lvgl C CXX)
 
+# Put build outputs inside the build/ folder
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
 # Set the correct FreeRTOS port for your system (e.g., Posix for WSL)
 set(FREERTOS_PORT GCC_POSIX CACHE STRING "Port for FreeRTOS on Posix environment")
 
@@ -49,11 +54,17 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Set the output path for the executable
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+#set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
 # Find and include SDL2 library
 find_package(SDL2 REQUIRED)
+message(STATUS "SDL2_LIBRARIES=${SDL2_LIBRARIES}")
+
+# Fix SDL_main error for MinGW
+# add_definitions(-DSDL_MAIN_HANDLED)
+list(REMOVE_ITEM SDL2_LIBRARIES SDL2main)
+list(REMOVE_ITEM SDL2_LIBRARIES SDL2::SDL2main)
 
 # Add compile definitions based on the selected options
 add_compile_definitions($<$<BOOL:${LV_USE_DRAW_SDL}>:LV_USE_DRAW_SDL=1>)
@@ -65,8 +76,10 @@ add_compile_definitions($<$<BOOL:${LV_USE_FFMPEG}>:LV_USE_FFMPEG=1>)
 add_subdirectory(lvgl)
 target_include_directories(lvgl PUBLIC ${PROJECT_SOURCE_DIR} ${SDL2_INCLUDE_DIRS})
 
-set(MAIN_SOURCES src/mouse_cursor_icon.c src/hal/hal.c)
-set(MAIN_LIBS lvgl lvgl::examples lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES})
+set(MAIN_SOURCES src/mouse_cursor_icon.c src/hal/hal.c  src/screen_analysis.c assets/fonts/fa_24.c src/screen_blank.c src/screen_dashboard.c src/screen_bio.c src/screen_sample.c)
+set(MAIN_LIBS lvgl ${SDL2_LIBRARIES})
+
+
 
 # Create the main executable, depending on the FreeRTOS option
 if(USE_FREERTOS)
@@ -82,7 +95,11 @@ if(NOT MSVC)
 endif()
 
 # Custom target to run the executable
-add_custom_target(run COMMAND ${EXECUTABLE_OUTPUT_PATH}/main DEPENDS main)
+add_custom_target(run
+    COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/main
+    DEPENDS main
+)
+
 
 # Conditionally include and link SDL2_image if LV_USE_DRAW_SDL is enabled
 if(LV_USE_DRAW_SDL)

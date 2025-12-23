@@ -1,97 +1,50 @@
-/**
- * @file main.c
- *
- */
-
-/*********************
- *      INCLUDES
- *********************/
-
-#ifndef _DEFAULT_SOURCE
-  #define _DEFAULT_SOURCE /* needed for usleep() */
-#endif
-
-#include <stdlib.h>
-#include <stdio.h>
-#ifdef _MSC_VER
-  #include <Windows.h>
-#else
-  #include <unistd.h>
-  #include <pthread.h>
-#endif
 #include "lvgl/lvgl.h"
-#include "lvgl/examples/lv_examples.h"
-#include "lvgl/demos/lv_demos.h"
-#include <SDL.h>
-
 #include "hal/hal.h"
+#include "screen_analysis.h"
+#include "screen_blank.h"
+#include "screen_dashboard.h"
+#include "screen_bio.h"
+#include "screen_sample.h"
+#include <stdio.h>
 
-/*********************
- *      DEFINES
- *********************/
 
-/**********************
- *      TYPEDEFS
- **********************/
-
-/**********************
- *  STATIC PROTOTYPES
- **********************/
-
-/**********************
- *  STATIC VARIABLES
- **********************/
-
-/**********************
- *      MACROS
- **********************/
-
-/**********************
- *   GLOBAL FUNCTIONS
- **********************/
-
-#if LV_USE_OS != LV_OS_FREERTOS
-
-int main(int argc, char **argv)
-{
-  (void)argc; /*Unused*/
-  (void)argv; /*Unused*/
-
-  /*Initialize LVGL*/
-  lv_init();
-
-  /*Initialize the HAL (display, input devices, tick) for LVGL*/
-  sdl_hal_init(320, 480);
-
-  /* Run the default demo */
-  /* To try a different demo or example, replace this with one of: */
-  /* - lv_demo_benchmark(); */
-  /* - lv_demo_stress(); */
-  /* - lv_example_label_1(); */
-  /* - etc. */
-  lv_demo_widgets();
-
-  while(1) {
-    /* Periodically call the lv_task handler.
-     * It could be done in a timer interrupt or an OS task too.*/
-    uint32_t sleep_time_ms = lv_timer_handler();
-    if(sleep_time_ms == LV_NO_TIMER_READY){
-	sleep_time_ms =  LV_DEF_REFR_PERIOD;
-    }
-#ifdef _MSC_VER
-    Sleep(sleep_time_ms);
+#ifdef _WIN32 
+    #include <Windows.h>
 #else
-    usleep(sleep_time_ms * 1000);
+    #include <unistd.h>
 #endif
-  }
 
-  return 0;
+
+
+int main(void)
+{
+    lv_init();
+
+    uint32_t hor_res = 1000;
+    uint32_t ver_res = 720;
+    sdl_hal_init(hor_res, ver_res);
+
+    
+    screen_analysis_create();
+    // screen_blank_create();
+    // screen_dashboard_create();
+    // screen_bio_create();
+    // screen_sample_create();
+
+    lv_screen_load(scr);
+
+
+    while (1) {
+        lv_timer_handler();
+
+    #ifdef _WIN32
+        Sleep(5);
+    #else
+        usleep(5000);
+    #endif
+    }
+
+    return 0;
 }
 
-
-#endif
-
-/**********************
- *   STATIC FUNCTIONS
- **********************/
 
